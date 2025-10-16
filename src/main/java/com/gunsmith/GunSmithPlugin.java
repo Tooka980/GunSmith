@@ -1,61 +1,35 @@
 package com.gunsmith;
 
-import com.gunsmith.service.*;
-import com.gunsmith.commands.GmCommand;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.PluginManager;
+import com.gunsmith.service.*;
 
 public class GunSmithPlugin extends JavaPlugin {
-    public com.gunsmith.service.ProjectileService getProjectileService(){ return this.projectileService; }
 
-    private void exportResourceIfPresent(String path) {
-        if (getResource(path) != null) {
-            saveResource(path, false);
-        } else {
-            getLogger().warning("Embedded resource missing, skipped: " + path);
-        }
-    }
-
-private WeaponRegistry weaponRegistry;
-    private FireService fireService;
-    private HomingService homingService;
-    private VisualService visualService;
     private ProjectileService projectileService;
-    private MeleeService meleeService;
-    private AmmoService ammoService;
-    private ListGui listGui;
 
-    @Override public void onEnable(){ 
+    @Override
+    public void onEnable() {
         saveDefaultConfig();
-        // export default resources (ignore missing)
+        // リソース展開（存在しなくても無視）
         try { saveResource("weapons/assault_rifle/AK_12.yml", false); } catch (Exception ignored) {}
-        try { saveResource("ammos.yml", False); } catch (Throwable ignored) {}
+        try { saveResource("ammos.yml", false); } catch (Throwable ignored) {}
 
-        // core singletons
-        com.gunsmith.service.WeaponRegistry weaponRegistry = new com.gunsmith.service.WeaponRegistry(this);
-        com.gunsmith.service.AmmoService ammoService = new com.gunsmith.service.AmmoService(this, weaponRegistry);
-        com.gunsmith.service.VisualService visualService = new com.gunsmith.service.VisualService(this);
-        com.gunsmith.service.ExplosionService explosionService = new com.gunsmith.service.ExplosionService(this, visualService);
-        this.projectileService = new com.gunsmith.service.ProjectileService(this, weaponRegistry, explosionService);
-        com.gunsmith.service.FireService fireService = new com.gunsmith.service.FireService(this, weaponRegistry, ammoService, visualService, explosionService, projectileService);
-        com.gunsmith.service.MeleeService meleeService = new com.gunsmith.service.MeleeService(this, weaponRegistry, ammoService);
+        // コアサービス初期化（依存順）
+        WeaponRegistry weaponRegistry = new WeaponRegistry(this);
+        AmmoService ammoService = new AmmoService(this);
+        VisualService visualService = new VisualService(this);
+        ExplosionService explosionService = new ExplosionService(this, visualService);
+        HomingService homingService = new HomingService(this, weaponRegistry);
+        this.projectileService = new ProjectileService(this, weaponRegistry, explosionService);
+        MeleeService meleeService = new MeleeService(this, weaponRegistry, ammoService);
+        FireService fireService = new FireService(this, weaponRegistry, homingService, visualService, ammoService);
 
-        org.bukkit.plugin.PluginManager pm = getServer().getPluginManager();
-        if (projectileService != null) pm.registerEvents(projectileService, this);
+        // Listener 登録（null安全）※ FireService は Listener ではない
+        PluginManager pm = getServer().getPluginManager();
+        if (this.projectileService != null) pm.registerEvents(this.projectileService, this);
         if (meleeService != null) pm.registerEvents(meleeService, this);
-        if (fireService != null) pm.registerEvents(fireService, this);
 
-        // commands (Paper API: registerCommand)
-        try {
-            new com.gunsmith.command.GMCommand(this, weaponRegistry, ammoService).register();
-        } catch (Throwable t){
-            getLogger().warning("Command registration failed: " + t.getMessage());
-        }
+        getLogger().info("[GunSmith] Enabled successfully!");
     }
-    @Override public void onDisable() { if (homingService != null) homingService.shutdown(); }
-    public WeaponRegistry getWeaponRegistry(){return weaponRegistry;}
-    public FireService getFireService(){return fireService;}
-    public HomingService getHomingService(){return homingService;}
-    public VisualService getVisualService(){return visualService;}
-    public AmmoService getAmmoService(){return ammoService;}
-    public ListGui getListGui(){return listGui;}
 }

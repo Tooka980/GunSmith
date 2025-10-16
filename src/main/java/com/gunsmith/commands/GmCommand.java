@@ -7,6 +7,7 @@ import com.gunsmith.service.WeaponRegistry;
 import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -28,7 +29,6 @@ public final class GmCommand implements BasicCommand {
         this.listGui = listGui;
     }
 
-    // /gm のベース権限（追加で各サブコマンド内でも細かくチェック）
     @Override
     public String permission() {
         return "gunsmith.use";
@@ -36,7 +36,7 @@ public final class GmCommand implements BasicCommand {
 
     @Override
     public void execute(CommandSourceStack source, String[] args) {
-        var sender = source.getSender();
+        final CommandSender sender = source.getSender();
 
         if (args.length == 0) {
             sender.sendMessage("§7[GunSmith] /gm <list|reload|give>");
@@ -46,7 +46,7 @@ public final class GmCommand implements BasicCommand {
         String sub = args[0].toLowerCase(Locale.ROOT);
         switch (sub) {
             case "list" -> {
-                Player p = source.getExecutor() != null ? source.getExecutor().getPlayer() : (sender instanceof Player sp ? sp : null);
+                Player p = (sender instanceof Player sp) ? sp : null;
                 if (p == null) { sender.sendMessage("§cPlayers only."); return; }
                 try {
                     listGui.open(p, 0);
@@ -76,9 +76,9 @@ public final class GmCommand implements BasicCommand {
                     target = Bukkit.getPlayerExact(args[2]);
                     if (target == null) { sender.sendMessage("§cPlayer not found: " + args[2]); return; }
                 } else {
-                    Player exec = source.getExecutor() != null ? source.getExecutor().getPlayer() : (sender instanceof Player sp ? sp : null);
-                    if (exec == null) { sender.sendMessage("§cSpecify a player when run from console."); return; }
-                    target = exec;
+                    // 送信者がプレイヤーのときは自分に付与／コンソールなら第3引数必須
+                    if (!(sender instanceof Player sp)) { sender.sendMessage("§cSpecify a player when run from console."); return; }
+                    target = sp;
                 }
 
                 Object w = getWeaponByIdLoose(weaponId);

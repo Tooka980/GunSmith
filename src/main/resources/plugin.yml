@@ -1,0 +1,19 @@
+name: GunSmith
+main: com.gunsmith.GunSmithPlugin
+version: 0.3.5
+api-version: '1.21'
+load: POSTWORLD
+author: Tooka980
+commands:
+  gm:
+    description: GunSmith management command
+    usage: /gm <list|reload|give>
+    aliases: [gunsmith]
+    permission: gunsmith.use
+permissions:
+  gunsmith.use:
+    default: true
+  gunsmith.give:
+    default: op
+  gunsmith.admin:
+    default: op

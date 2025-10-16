@@ -7,22 +7,32 @@ on:
 jobs:
   build-windows:
     runs-on: windows-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java 21 (Temurin)
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
+
       - name: Generate Gradle Wrapper (8.10.2)
         shell: pwsh
         run: |
-          $ver="8.10.2"
+          $ErrorActionPreference = 'Stop'
+          $ver = "8.10.2"
           Invoke-WebRequest "https://services.gradle.org/distributions/gradle-$ver-bin.zip" -OutFile gradle.zip
-          Expand-Archive gradle.zip -DestinationPath .
-          .\gradle-$ver\bin\gradle.bat wrapper --gradle-version $ver
+          Expand-Archive -Path gradle.zip -DestinationPath .
+          $gradleExe = Join-Path -Path (Join-Path -Path $PWD -ChildPath "gradle-$ver") -ChildPath "bin\gradle.bat"
+          if (-not (Test-Path $gradleExe)) { throw "Gradle exe not found at $gradleExe" }
+          & "$gradleExe" wrapper --gradle-version $ver
+
       - name: Build with Wrapper
         shell: pwsh
         run: .\gradlew.bat build
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:

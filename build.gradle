@@ -1,6 +1,6 @@
 plugins { id 'java' }
 group = 'com.gunsmith'
-version = '0.3.2'
+version = '0.3.3'
 java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
 repositories { mavenCentral(); maven { url = 'https://repo.papermc.io/repository/maven-public/' } }
 dependencies { compileOnly 'io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT' }

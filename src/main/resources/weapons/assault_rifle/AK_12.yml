@@ -1,0 +1,66 @@
+AK_12:
+  Info:
+    Weapon_Item:
+      Material: "minecraft:iron_horse_armor"
+      CustomModelData: 12112
+      Name: "&6AK-12"
+      Unbreakable: true
+  Melee:
+    Enable_Melee: false
+    Melee_Attachment:
+    Melee_Range: 3.0
+    Melee_Hit_Delay: 12
+    Melee_Miss_Delay: 10
+    Consume_On_Miss: false
+  Controls:
+    Select_Fire: { Toggle: SWAP_HAND, Cycle_Order: ["SEMI","BURST","AUTO"] }
+    Sneak_As_ADS: true
+  Movement: { ADS_Speed_Scale: 0.85 }
+  Trigger:
+    Rate_RPM: 650
+    Select_Fire: ["SEMI","BURST","AUTO"]
+    Single_Action: false
+    Burst: { Count: 2, Interval_Ticks: 2 }
+  Magazine:
+    Capacity: 30
+    Start_Loaded: true
+    Consume_Ammo: true
+    Require_Ammo_In_Inventory: true
+    Ammo_List: [AK_Ammo_545x39]
+  HitDetection:
+    Headshot_Multiplier: 1.6
+    Multipliers: { Head: 1.6, Body: 1.0, Limb: 0.85 }
+  Ballistics:
+    Mode: PHYSICAL
+    Projectile_Speed: 3.2
+    Range_Ticks: 220
+    Entity: { Type: "minecraft:arrow", Lifespan_Ticks: 220 }
+    Gravity: { Enabled: true, Value: 0.05 }
+    Drag: { Base: 0.99, In_Water: 0.96 }
+    Homing: { Enabled: false }
+    Penetration:
+      Enabled: true
+      Max_Entities: 1
+      Max_Blocks: 1
+      Allow_Blocks: ["minecraft:glass","minecraft:gray_stained_glass","minecraft:ice"]
+    Damage:
+      Base: 5.5
+    Impact_Explode: { Enabled: false, Delay_Ticks: 0 }
+    Explosion:
+      Knockback_Multiplier: 1.0
+      Explosion_Exposure: DEFAULT
+      Explosion_Shape: SPHERE
+      Explosion_Type_Data: { Radius: 3.5, Rays: 16 }
+      Detonation:
+        Delay_After_Impact: 0
+        Remove_Projectile_On_Detonation: true
+        Impact_When: { Spawn: false, Entity: true, Block: true }
+      Cluster_Bomb:
+        Number_Of_Bombs: 0
+        Number_Of_Splits: 0
+      Airstrike:
+        Minimum_Bombs: 0
+        Maximum_Bombs: 0
+  Spread:
+    Hipfire: { Base: 0.35 }
+    ADS: { Base: 0.18 }

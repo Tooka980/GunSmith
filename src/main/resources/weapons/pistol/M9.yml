@@ -1,0 +1,21 @@
+M9:
+  Info:
+    Weapon_Item: { Material: "minecraft:iron_nugget", Name: "&fM9", Unbreakable: true }
+  Controls:
+    Sneak_As_ADS: true
+  Trigger: { Select_Fire: ["SEMI"], Rate_Per_Sec: 6.0 }
+  Magazine:
+    Capacity: 15
+    Ammo_List: [AK_Ammo_545x39]
+    Consume_Ammo: true
+    Require_Ammo_In_Inventory: true
+  HitDetection:
+    Multipliers: { Head: 1.8, Body: 1.0, Limb: 0.8 }
+  Ballistics:
+    Mode: RAY
+    Range_Ticks: 160
+    Penetration: { Enabled: true, Max_Entities: 1, Max_Blocks: 0 }
+    Damage: { Base: 3.0 }
+  Spread:
+    Hipfire: { Base: 0.2 }
+    ADS: { Base: 0.1 }

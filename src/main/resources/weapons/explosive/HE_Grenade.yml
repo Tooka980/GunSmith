@@ -1,0 +1,22 @@
+HE_GRENade:
+  Info:
+    Weapon_Item: { Material: "minecraft:slime_ball", Name: "&cHE Grenade", Unbreakable: true }
+  Controls: { Sneak_As_ADS: false }
+  Trigger: { Select_Fire: ["SEMI"], Rate_Per_Sec: 1.0 }
+  Magazine:
+    Capacity: 1
+    Ammo_List: [HE_Grenade]
+    Consume_Ammo: true
+    Require_Ammo_In_Inventory: true
+  Ballistics:
+    Mode: ITEM
+    Range_Ticks: 120
+    Entity: { Lifespan_Ticks: 120 }
+    Damage: { Base: 0.0 }
+    Impact_Explode: { Enabled: false }
+    Explosion:
+      Fuse_Ticks: 60
+      Radius: 4.0
+      Damage_At_Center: 12.0
+      Damage_At_Edge: 4.0
+      Cluster: { Times: 1, Count: 4 }

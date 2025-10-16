@@ -1,0 +1,21 @@
+Weapon_Title:
+  Item_Information:
+    Item_Name: "&bCS-Sample Rifle"
+    Item_Type: "minecraft:iron_horse_armor"
+  Shooting:
+    Fully_Automatic:
+      Enable: true
+      Fire_Rate: 600  # RPM
+    Delay_Between_Shots: 0
+    Projectile_Type: "arrow"
+    Projectile_Speed: 3.0
+    Projectile_Damage: 6.0
+    Remove_Bullet_Drop: false
+  Burstfire:
+    Enable: true
+    Shots_Per_Burst: 3
+    Delay_Between_Shots_In_Burst: 2
+  Ammo:
+    Enable: true
+    Ammo_Item_ID: "AK_Ammo_545x39"
+    Take_Ammo_Per_Shot: true

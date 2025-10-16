@@ -1,0 +1,22 @@
+AK_47:
+  Info:
+    Weapon_Item: { Material: "minecraft:golden_horse_armor", Name: "&6AK-47", Unbreakable: true }
+  Controls:
+    Sneak_As_ADS: true
+  Trigger: { Select_Fire: ["SEMI","AUTO"], Rate_Per_Sec: 11.0 }
+  Magazine:
+    Capacity: 30
+    Ammo_List: [AK_Ammo_545x39]
+    Consume_Ammo: true
+    Require_Ammo_In_Inventory: true
+  HitDetection:
+    Multipliers: { Head: 1.6, Body: 1.0, Limb: 0.85 }
+  Ballistics:
+    Mode: PHYSICAL
+    Range_Ticks: 220
+    Entity: { Type: "minecraft:arrow", Lifespan_Ticks: 220 }
+    Penetration: { Enabled: true, Max_Entities: 1, Max_Blocks: 1 }
+    Damage: { Base: 6.0 }
+  Spread:
+    Hipfire: { Base: 0.36 }
+    ADS: { Base: 0.2 }

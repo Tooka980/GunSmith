@@ -1,0 +1,20 @@
+RPG_7:
+  Info:
+    Weapon_Item: { Material: "minecraft:blaze_rod", Name: "&6RPG-7", Unbreakable: true }
+  Controls: { Sneak_As_ADS: true }
+  Trigger: { Select_Fire: ["SEMI"], Rate_Per_Sec: 1.0 }
+  Magazine:
+    Capacity: 1
+    Ammo_List: [HE_Grenade]
+    Consume_Ammo: true
+    Require_Ammo_In_Inventory: true
+  Ballistics:
+    Mode: PHYSICAL
+    Range_Ticks: 160
+    Entity: { Type: "minecraft:arrow", Lifespan_Ticks: 160 }
+    Damage: { Base: 2.0 }
+    Impact_Explode: { Enabled: true, Delay_Ticks: 0 }
+    Explosion:
+      Radius: 5.0
+      Damage_At_Center: 15.0
+      Damage_At_Edge: 6.0

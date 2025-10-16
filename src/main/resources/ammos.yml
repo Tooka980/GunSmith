@@ -1,0 +1,18 @@
+AK_Ammo_545x39:
+  Item:
+    Material: "minecraft:paper"
+    Name: "&e5.45x39mm"
+  Reserve_Max: 210
+  Damage:
+    Base: 1.0
+  Physics_Override:
+    Gravity: { Enabled: true, Value: 0.055 }
+    Drag: { Base: 0.992 }
+
+HE_Grenade:
+  Item:
+    Material: "minecraft:slime_ball"
+    Name: "&cHE Grenade"
+  Reserve_Max: 64
+  Damage:
+    Base: 6.0

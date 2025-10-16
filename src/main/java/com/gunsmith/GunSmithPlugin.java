@@ -5,6 +5,7 @@ import com.gunsmith.commands.GmCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class GunSmithPlugin extends JavaPlugin {
+    public com.gunsmith.service.ProjectileService getProjectileService(){ return this.projectileService; }
 
     private void exportResourceIfPresent(String path) {
         if (getResource(path) != null) {

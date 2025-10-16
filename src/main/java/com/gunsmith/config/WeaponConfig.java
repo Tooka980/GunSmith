@@ -5,6 +5,53 @@ import org.bukkit.configuration.ConfigurationSection;
 import java.util.List;
 
 public class WeaponConfig {
+    // === Added by v0.3.4: extra fields to satisfy new features ===
+    // Melee
+    public boolean meleeEnable;
+    public String meleeAttachmentId;
+    public double meleeRange;
+    public int meleeHitDelay;
+    public int meleeMissDelay;
+    public boolean meleeConsumeOnMiss;
+    public Double meleeDamageBase;
+
+    // Fire mode
+    public boolean singleAction;
+
+    // Explosion advanced settings
+    public double explosionKnockbackMultiplier;
+    public String explosionExposure;
+    public String explosionShape;
+    public double expYield, expRadius, expAngle, expDepth, expWidth, expHeight;
+    public int expRays;
+    public int detonationDelayAfterImpact;
+    public boolean detonationRemoveProjectile;
+    public boolean detonationOnSpawn, detonationOnEntity, detonationOnBlock;
+
+    // Cluster
+    public String clusterSplitProjectile;
+    public double clusterProjectileSpeed;
+    public int clusterNumberOfBombs;
+    public int clusterNumberOfSplits;
+    public int clusterDetonationDelayAfterImpact;
+    public boolean clusterRemoveProjectileOnDetonation;
+    public boolean clusterImpactSpawn, clusterImpactEntity, clusterImpactBlock;
+
+    // Airstrike
+    public String airstrikeDroppedProjectile;
+    public int airstrikeMinBombs, airstrikeMaxBombs;
+    public double airstrikeHeight, airstrikeVerticalRandomness, airstrikeDistanceBetween, airstrikeMaxDistanceFromCenter;
+    public int airstrikeLayers, airstrikeDelayBetweenLayers;
+    public int airstrikeDetonationDelayAfterImpact;
+    public boolean airstrikeRemoveProjectileOnDetonation;
+    public boolean airstrikeImpactSpawn, airstrikeImpactEntity, airstrikeImpactBlock;
+
+    // Projectile lifecycle & impact flags used by ProjectileService
+    public int projectileLifespanTicks = 200;
+    public boolean impactExplodeEnabled;
+    public int impactExplodeDelay;
+    public int rangeTicks = 200;
+
     public String id;
     public String material;
     public String name;
@@ -295,10 +342,9 @@ public class WeaponConfig {
             w.consumeAmmo = ammoEnable && csA.getBoolean("Take_Ammo_Per_Shot", true);
             w.requireAmmo = ammoEnable;
             // map material id if provided
-            String id = csA.getString("Ammo_Item_ID", null);
-            if (id != null){
-                // store in ammoId for our ammo mapping
-                w.ammoId = id;
+            String ammoIdStr = csA.getString("Ammo_Item_ID", null);
+            if (ammoIdStr != null){
+                w.ammoId = ammoIdStr;
             }
         }
         if (sec.getConfigurationSection("Scope") != null){

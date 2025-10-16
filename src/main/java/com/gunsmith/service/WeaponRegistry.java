@@ -94,4 +94,16 @@ public class WeaponRegistry {
         }
         return m != null ? m : fallback;
     }
+
+    public com.gunsmith.config.WeaponConfig getHeldWeapon(org.bukkit.entity.Player p){
+        org.bukkit.inventory.ItemStack is = p.getInventory().getItemInMainHand();
+        if (is == null || !is.hasItemMeta()) return null;
+        var meta = is.getItemMeta();
+        var pdc = meta.getPersistentDataContainer();
+        var key = new org.bukkit.NamespacedKey(plugin, "weapon_id");
+        String id = pdc.get(key, org.bukkit.persistence.PersistentDataType.STRING);
+        if (id == null) return null;
+        return getById(id);
+    }
+
 }

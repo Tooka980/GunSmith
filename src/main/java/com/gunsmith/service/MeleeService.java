@@ -1,79 +1,65 @@
-package com.gunsmith.service;
+package com.gunsmith;
 
-import com.gunsmith.GunSmithPlugin;
-import com.gunsmith.config.WeaponConfig;
-import org.bukkit.Bukkit;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.util.BoundingBox;
-import org.bukkit.util.Vector;
-
-import java.util.HashMap;
-import java.util.Map;
+import org.bukkit.plugin.java.JavaPlugin;
 
 /**
- * Minimal melee implementation:
- * - Left click air/block to melee.
- * - Uses WeaponConfig.melee* fields (must exist).
- * - Does not depend on AmmoService (compiles even if its API changes).
+ * Clean onEnable wiring for 0.3.x
+ * - Matches current constructor signatures in services
+ * - Exposes getters used by other components
+ * - Guards saveDefaultConfig() if config.yml is not embedded
  */
-public class MeleeService implements Listener {
+public class GunSmithPlugin extends JavaPlugin {
 
-    private final GunSmithPlugin plugin;
-    private final WeaponRegistry registry;
+    private com.gunsmith.service.ProjectileService projectileService;
+    private com.gunsmith.service.AmmoService ammoService;
 
-    private final Map<java.util.UUID, Long> lastHit = new HashMap<>();
-
-    public MeleeService(GunSmithPlugin plugin, WeaponRegistry registry /*, AmmoService ammo if needed */) {
-        this.plugin = plugin;
-        this.registry = registry;
-        // ammo は今回は未使用（依存を減らしてビルド安定化）
+    public com.gunsmith.service.ProjectileService getProjectileService() {
+        return this.projectileService;
+    }
+    public com.gunsmith.service.AmmoService getAmmoService() {
+        return this.ammoService;
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onInteract(PlayerInteractEvent e) {
-        Action a = e.getAction();
-        if (a != Action.LEFT_CLICK_AIR && a != Action.LEFT_CLICK_BLOCK) return;
-
-        Player p = e.getPlayer();
-        WeaponConfig w = registry.getHeldWeapon(p);
-        if (w == null) return;
-
-        // 近接が無効＆アタッチメントも無しなら抜ける
-        if (!w.meleeEnable && w.meleeAttachmentId == null) return;
-
-        long now = System.currentTimeMillis();
-        Long until = lastHit.get(p.getUniqueId());
-        if (until != null && now < until) return; // クールダウン中
-
-        double range = Math.max(1.0, (w.meleeRange <= 0 ? 3.0 : w.meleeRange));
-        Vector dir = p.getEyeLocation().getDirection().normalize();
-        Vector start = p.getEyeLocation().toVector();
-        Vector end = start.clone().add(dir.multiply(range));
-        BoundingBox box = BoundingBox.of(start.toLocation(p.getWorld()), end.toLocation(p.getWorld())).expand(0.6);
-
-        LivingEntity closest = null;
-        double closestDist = Double.MAX_VALUE;
-        for (var ent : p.getWorld().getNearbyEntities(box)) {
-            if (ent instanceof LivingEntity le && !le.getUniqueId().equals(p.getUniqueId())) {
-                double d = le.getLocation().distanceSquared(p.getEyeLocation());
-                if (d < closestDist) { closestDist = d; closest = le; }
-            }
-        }
-
-        if (closest != null) {
-            double dmg = (w.meleeDamageBase != null ? w.meleeDamageBase : w.damageBase);
-            closest.damage(Math.max(0.0, dmg), p);
-            lastHit.put(p.getUniqueId(), now + Math.max(0, w.meleeHitDelay) * 50L);
+    @Override
+    public void onEnable() {
+        // Only call saveDefaultConfig() when config.yml is embedded in the jar
+        if (getResource("config.yml") != null) {
+            saveDefaultConfig();
         } else {
-            lastHit.put(p.getUniqueId(), now + Math.max(0, w.meleeMissDelay) * 50L);
-            if (w.meleeConsumeOnMiss) {
-                // 将来 AmmoService に接続する場合はここで弾／耐久消費を実装
-            }
+            getLogger().warning("config.yml not embedded, skipping saveDefaultConfig()");
         }
+
+        // Export sample resources (ignore if missing)
+        try { saveResource("weapons/assault_rifle/AK_12.yml", false); } catch (Exception ignored) {}
+        try { saveResource("ammos.yml", false); } catch (Throwable ignored) {}
+
+        // Core services (respect actual constructor signatures)
+        com.gunsmith.service.WeaponRegistry weaponRegistry = new com.gunsmith.service.WeaponRegistry(this);
+        this.ammoService = new com.gunsmith.service.AmmoService(this);
+        com.gunsmith.service.VisualService visualService = new com.gunsmith.service.VisualService(this);
+        com.gunsmith.service.ExplosionService explosionService = new com.gunsmith.service.ExplosionService(this, visualService);
+        // HomingService expects (Plugin, VisualService)
+        com.gunsmith.service.HomingService homingService = new com.gunsmith.service.HomingService(this, visualService);
+        this.projectileService = new com.gunsmith.service.ProjectileService(this, weaponRegistry, explosionService);
+
+        // ❗ FIX: MeleeService は (GunSmithPlugin, WeaponRegistry) の 2 引数コンストラクタ
+        com.gunsmith.service.MeleeService meleeService = new com.gunsmith.service.MeleeService(this, weaponRegistry);
+
+        // FireService は Listener ではない
+        com.gunsmith.service.FireService fireService = new com.gunsmith.service.FireService(
+                this, weaponRegistry, homingService, visualService, this.ammoService
+        );
+
+        // Register only real listeners
+        org.bukkit.plugin.PluginManager pm = getServer().getPluginManager();
+        if (this.projectileService != null) pm.registerEvents(this.projectileService, this);
+        if (meleeService != null) pm.registerEvents(meleeService, this);
+
+        getLogger().info("GunSmith initialized.");
+    }
+
+    @Override
+    public void onDisable() {
+        // graceful shutdown if needed
     }
 }

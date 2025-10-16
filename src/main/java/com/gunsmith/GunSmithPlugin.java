@@ -24,25 +24,32 @@ private WeaponRegistry weaponRegistry;
     private AmmoService ammoService;
     private ListGui listGui;
 
-    @Override public void onEnable() {
-        exportResourceIfPresent("weapons/assault_rifle/AK_12.yml");
-        exportResourceIfPresent("ammos.yml");
-        exportResourceIfPresent("attachments.yml");
-        exportResourceIfPresent("GunSmith_full_schema.yml");
+    @Override public void onEnable(){ 
+        saveDefaultConfig();
+        // export default resources (ignore missing)
+        try { saveResource("weapons/assault_rifle/AK_12.yml", false); } catch (Exception ignored) {}
+        try { saveResource("ammos.yml", False); } catch (Throwable ignored) {}
 
-        weaponRegistry = new WeaponRegistry(this); weaponRegistry.reload();
-        visualService = new VisualService(this);
-        homingService = new HomingService(this, visualService);
-        ammoService = new AmmoService(this);
-        fireService = new FireService(this, weaponRegistry, homingService, visualService, ammoService);
-        listGui = new ListGui(this, weaponRegistry);
+        // core singletons
+        com.gunsmith.service.WeaponRegistry weaponRegistry = new com.gunsmith.service.WeaponRegistry(this);
+        com.gunsmith.service.AmmoService ammoService = new com.gunsmith.service.AmmoService(this, weaponRegistry);
+        com.gunsmith.service.VisualService visualService = new com.gunsmith.service.VisualService(this);
+        com.gunsmith.service.ExplosionService explosionService = new com.gunsmith.service.ExplosionService(this, visualService);
+        this.projectileService = new com.gunsmith.service.ProjectileService(this, weaponRegistry, explosionService);
+        com.gunsmith.service.FireService fireService = new com.gunsmith.service.FireService(this, weaponRegistry, ammoService, visualService, explosionService, projectileService);
+        com.gunsmith.service.MeleeService meleeService = new com.gunsmith.service.MeleeService(this, weaponRegistry, ammoService);
 
-        getServer().getPluginManager().registerEvents(new GunSmithListener(this, weaponRegistry, fireService), this);
-        getServer().getPluginManager().registerEvents(listGui, this);
-        getServer().getPluginManager().registerEvents(projectileService, this);
-        getServer().getPluginManager().registerEvents(meleeService, this);
+        org.bukkit.plugin.PluginManager pm = getServer().getPluginManager();
+        if (projectileService != null) pm.registerEvents(projectileService, this);
+        if (meleeService != null) pm.registerEvents(meleeService, this);
+        if (fireService != null) pm.registerEvents(fireService, this);
 
-        getLogger().info("GunSmith enabled: " + weaponRegistry.getWeaponsCount() + " weapons");
+        // commands (Paper API: registerCommand)
+        try {
+            new com.gunsmith.command.GMCommand(this, weaponRegistry, ammoService).register();
+        } catch (Throwable t){
+            getLogger().warning("Command registration failed: " + t.getMessage());
+        }
     }
     @Override public void onDisable() { if (homingService != null) homingService.shutdown(); }
     public WeaponRegistry getWeaponRegistry(){return weaponRegistry;}

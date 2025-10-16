@@ -1,35 +1,50 @@
 package com.gunsmith;
 
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.plugin.PluginManager;
-import com.gunsmith.service.*;
 
+/**
+ * Clean onEnable with correct service wiring for 0.3.x line.
+ * - Avoids registering null listeners
+ * - Matches current constructor signatures observed in build logs
+ */
 public class GunSmithPlugin extends JavaPlugin {
 
-    private ProjectileService projectileService;
+    private com.gunsmith.service.ProjectileService projectileService;
+
+    public com.gunsmith.service.ProjectileService getProjectileService() {
+        return this.projectileService;
+    }
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
-        // リソース展開（存在しなくても無視）
+        // Export sample resources (ignore if missing)
         try { saveResource("weapons/assault_rifle/AK_12.yml", false); } catch (Exception ignored) {}
         try { saveResource("ammos.yml", false); } catch (Throwable ignored) {}
 
-        // コアサービス初期化（依存順）
-        WeaponRegistry weaponRegistry = new WeaponRegistry(this);
-        AmmoService ammoService = new AmmoService(this);
-        VisualService visualService = new VisualService(this);
-        ExplosionService explosionService = new ExplosionService(this, visualService);
-        HomingService homingService = new HomingService(this, weaponRegistry);
-        this.projectileService = new ProjectileService(this, weaponRegistry, explosionService);
-        MeleeService meleeService = new MeleeService(this, weaponRegistry, ammoService);
-        FireService fireService = new FireService(this, weaponRegistry, homingService, visualService, ammoService);
+        // Core services (respect constructor signatures)
+        com.gunsmith.service.WeaponRegistry weaponRegistry = new com.gunsmith.service.WeaponRegistry(this);
+        com.gunsmith.service.AmmoService ammoService = new com.gunsmith.service.AmmoService(this);
+        com.gunsmith.service.VisualService visualService = new com.gunsmith.service.VisualService(this);
+        com.gunsmith.service.ExplosionService explosionService = new com.gunsmith.service.ExplosionService(this, visualService);
+        com.gunsmith.service.HomingService homingService = new com.gunsmith.service.HomingService(this, weaponRegistry);
+        this.projectileService = new com.gunsmith.service.ProjectileService(this, weaponRegistry, explosionService);
+        com.gunsmith.service.MeleeService meleeService = new com.gunsmith.service.MeleeService(this, weaponRegistry, ammoService);
+        // FireService is NOT a Listener; do not register as events
+        com.gunsmith.service.FireService fireService = new com.gunsmith.service.FireService(
+                this, weaponRegistry, homingService, visualService, ammoService
+        );
 
-        // Listener 登録（null安全）※ FireService は Listener ではない
-        PluginManager pm = getServer().getPluginManager();
+        // Register only real listeners
+        org.bukkit.plugin.PluginManager pm = getServer().getPluginManager();
         if (this.projectileService != null) pm.registerEvents(this.projectileService, this);
         if (meleeService != null) pm.registerEvents(meleeService, this);
 
-        getLogger().info("[GunSmith] Enabled successfully!");
+        getLogger().info("GunSmith initialized.");
+    }
+
+    @Override
+    public void onDisable() {
+        // graceful shutdown if needed
     }
 }

@@ -2,359 +2,243 @@ package com.gunsmith.config;
 
 import org.bukkit.configuration.ConfigurationSection;
 
-import java.util.List;
-
+/**
+ * Minimal but complete WeaponConfig to satisfy current services.
+ * - Contains every field referenced by FireService / ProjectileService / MeleeService / ExplosionService
+ * - Provides a static parser: from(String id, ConfigurationSection sec)
+ */
 public class WeaponConfig {
-    // === Added by v0.3.4: extra fields to satisfy new features ===
-    // Melee
-    public boolean meleeEnable;
-    public String meleeAttachmentId;
-    public double meleeRange;
-    public int meleeHitDelay;
-    public int meleeMissDelay;
-    public boolean meleeConsumeOnMiss;
-    public Double meleeDamageBase;
 
-    // Fire mode
-    public boolean singleAction;
+    // --- Identity ---
+    public String id;
 
-    // Explosion advanced settings
-    public double explosionKnockbackMultiplier;
-    public String explosionExposure;
-    public String explosionShape;
-    public double expYield, expRadius, expAngle, expDepth, expWidth, expHeight;
-    public int expRays;
-    public int detonationDelayAfterImpact;
-    public boolean detonationRemoveProjectile;
-    public boolean detonationOnSpawn, detonationOnEntity, detonationOnBlock;
+    // --- Common sections (kept for downstream services) ---
+    public ConfigurationSection explosionSection; // Ballistics.Explosion
+    public ConfigurationSection visualSection;    // Ballistics.Visual
 
-    // Cluster
-    public String clusterSplitProjectile;
-    public double clusterProjectileSpeed;
-    public int clusterNumberOfBombs;
-    public int clusterNumberOfSplits;
-    public int clusterDetonationDelayAfterImpact;
-    public boolean clusterRemoveProjectileOnDetonation;
-    public boolean clusterImpactSpawn, clusterImpactEntity, clusterImpactBlock;
+    // --- Damage (projectile base) ---
+    public double damageBase = 6.0;
+
+    // Damage extras (explosion and flags)
+    public double damageBaseExplosion = 0.0;
+    public int damageFireTicks = 0;
+    public boolean damageOwnerImmunity = false;
+    public boolean damageIgnoreTeams = false;
+    public int damageArmorDamage = 0;
+
+    // --- Hit multipliers (Head/Body/Limb) ---
+    public double headMultiplier = 1.5;
+    public double bodyMultiplier = 1.0;
+    public double limbMultiplier = 0.85;
+
+    // --- Ranging / lifetimes / impact explode (used by ProjectileService) ---
+    /** “射程”の内部 tick 管理（Ballistics.Range_Ticks） */
+    public int rangeTicks = 200;
+    /** 物理発射体の寿命（Ballistics.Entity.Lifespan_Ticks） */
+    public int projectileLifespanTicks = 200;
+    /** 着弾爆発の有効/無効（Ballistics.Impact_Explode.Enabled） */
+    public boolean impactExplodeEnabled = false;
+    /** 着弾爆発の遅延 tick（Ballistics.Impact_Explode.Delay_Ticks） */
+    public int impactExplodeDelay = 0;
+
+    // --- Melee (MeleeService) ---
+    public boolean meleeEnable = false;
+    public String meleeAttachmentId = null;
+    public double meleeRange = 3.0;
+    public int meleeHitDelay = 10;
+    public int meleeMissDelay = 10;
+    public boolean meleeConsumeOnMiss = false;
+    public Double meleeDamageBase = null; // if null, fall back to damageBase
+
+    // --- Fire modes ---
+    /** SINGLE_ACTION（単動）フラグ */
+    public boolean singleAction = false;
+
+    // --- Explosion (advanced) ---
+    public double explosionKnockbackMultiplier = 1.0;
+    /** DEFAULT / DISTANCE / NONE */
+    public String explosionExposure = "DEFAULT";
+    /** DEFAULT / SPHERE / CUBE / PARABOLA(予約) */
+    public String explosionShape = "DEFAULT";
+
+    // Explosion type data
+    public double expYield = 4.0;
+    public double expRadius = 3.0;
+    public double expAngle = 0.0;
+    public double expDepth = 0.0;
+    public double expWidth = 0.0;
+    public double expHeight = 0.0;
+    public int expRays = 16;
+
+    // Detonation behavior
+    public int detonationDelayAfterImpact = 0;
+    public boolean detonationRemoveProjectile = true;
+    public boolean detonationOnSpawn = false;
+    public boolean detonationOnEntity = true;
+    public boolean detonationOnBlock = true;
+
+    // Cluster (ITEM only)
+    public String clusterSplitProjectile = null;
+    public double clusterProjectileSpeed = 1.0;
+    public int clusterNumberOfBombs = 0;
+    public int clusterNumberOfSplits = 0;
+    public int clusterDetonationDelayAfterImpact = 0;
+    public boolean clusterRemoveProjectileOnDetonation = true;
+    public boolean clusterImpactSpawn = false;
+    public boolean clusterImpactEntity = true;
+    public boolean clusterImpactBlock = true;
 
     // Airstrike
-    public String airstrikeDroppedProjectile;
-    public int airstrikeMinBombs, airstrikeMaxBombs;
-    public double airstrikeHeight, airstrikeVerticalRandomness, airstrikeDistanceBetween, airstrikeMaxDistanceFromCenter;
-    public int airstrikeLayers, airstrikeDelayBetweenLayers;
-    public int airstrikeDetonationDelayAfterImpact;
-    public boolean airstrikeRemoveProjectileOnDetonation;
-    public boolean airstrikeImpactSpawn, airstrikeImpactEntity, airstrikeImpactBlock;
+    public String airstrikeDroppedProjectile = null;
+    public int airstrikeMinBombs = 0, airstrikeMaxBombs = 0;
+    public double airstrikeHeight = 60.0;
+    public double airstrikeVerticalRandomness = 5.0;
+    public double airstrikeDistanceBetween = 3.0;
+    public double airstrikeMaxDistanceFromCenter = 25.0;
+    public int airstrikeLayers = 1;
+    public int airstrikeDelayBetweenLayers = 40;
+    public int airstrikeDetonationDelayAfterImpact = 0;
+    public boolean airstrikeRemoveProjectileOnDetonation = true;
+    public boolean airstrikeImpactSpawn = false, airstrikeImpactEntity = true, airstrikeImpactBlock = true;
 
-    // Projectile lifecycle & impact flags used by ProjectileService
-    public int projectileLifespanTicks = 200;
-    public boolean impactExplodeEnabled;
-    public int impactExplodeDelay;
-    public int rangeTicks = 200;
+    // ===== Parser =====
 
-    public String id;
-    public String material;
-    public String name;
-    public boolean unbreakable;
-
-    // Controls / movement
-    public List<String> selectFireOrder;
-    public double ratePerSec;
-    public double rateRPM;
-    public int burstCount;
-    public int burstInterval;
-    public boolean sneakAsADS;
-    public double adsSpeedScale;
-
-    // Magazine & ammo mapping
-    public int magCapacity;
-    public boolean startLoaded;
-    public boolean consumeAmmo;
-    public boolean requireAmmo;
-    public String ammoId; // single
-    public List<String> ammoList; // multiple
-
-    // Ballistics
-    public String mode; // RAY, PHYSICAL, ITEM
-    public String entityType;
-    public boolean gravityEnabled;
-    public Double gravityValue;
-    public double dragBase;
-    public double projectileSpeed;
-    public Double dragWater;
-    public Double dragLava;
-    public int rangeTicks; // lifetime range
-    public int projectileLifespanTicks; // for physical entity removal
-
-    // Homing
-    public boolean homingEnabled;
-    public int homingMaxTicks;
-    public double homingMaxDistance;
-    public double homingTurnRateDeg;
-    public boolean homingLoseOnObstruction;
-    public boolean homingRetarget;
-    public int homingRetargetInterval;
-    public double homingRetargetRadius;
-
-    // Penetration
-    public boolean penetrationEnabled;
-    public int penetrationMaxEntities;
-    public int penetrationMaxBlocks;
-    public java.util.List<String> penetrationAllowBlocks;
-
-    // Damage
-    public double damageBase;     // weapon base damage (adds to ammo damage)
-    public double hsMultiplier;
-    public double headMultiplier;
-    public double bodyMultiplier;
-    public double limbMultiplier;
-
-    // Damage extras
-    public double damageBaseExplosion;
-    public int damageFireTicks;
-    public boolean damageOwnerImmunity;
-    public boolean damageIgnoreTeams;
-    public int damageArmorDamage;
-
-    // Explosion
-    public ConfigurationSection explosionSection;
-    public boolean impactExplodeEnabled;
-    public int impactExplodeDelay;
-
-    // Visual / Spread / Recoil
-    public ConfigurationSection visualSection;
-    public ConfigurationSection spreadSection;
-    public ConfigurationSection recoilSection;
-
-    public static WeaponConfig from(String id, ConfigurationSection sec){
+    public static WeaponConfig from(final String id, final ConfigurationSection sec) {
         WeaponConfig w = new WeaponConfig();
         w.id = id;
-        var info = sec.getConfigurationSection("Info.Weapon_Item");
-        if (info != null){
-            w.material = info.getString("Material", "minecraft:iron_horse_armor");
-            w.name = info.getString("Name", id);
-            w.unbreakable = info.getBoolean("Unbreakable", true);
-        }
-        w.sneakAsADS = sec.getBoolean("Controls.Sneak_As_ADS", true);
-        w.adsSpeedScale = sec.getDouble("Movement.ADS_Speed_Scale", 0.85);
 
-        w.selectFireOrder = sec.getStringList("Trigger.Select_Fire");
-        w.ratePerSec = sec.getDouble("Trigger.Rate_Per_Sec", 8.0);
-        w.rateRPM = sec.getDouble("Trigger.Rate_RPM", w.ratePerSec*60.0);
-        w.burstCount = sec.getInt("Trigger.Burst.Count", 3);
-        w.burstInterval = sec.getInt("Trigger.Burst.Interval_Ticks", 2);
+        if (sec == null) return w;
 
-        var mag = sec.getConfigurationSection("Magazine");
-        w.magCapacity = mag != null ? mag.getInt("Capacity", 30) : 30;
-        w.startLoaded = mag != null && mag.getBoolean("Start_Loaded", true);
-        w.consumeAmmo = mag == null || mag.getBoolean("Consume_Ammo", true);
-        w.requireAmmo = mag == null || mag.getBoolean("Require_Ammo_In_Inventory", true);
-        if (mag != null) {
-            w.ammoId = mag.getString("Ammo", null);
-            w.ammoList = mag.getStringList("Ammo_List");
+        // Base damage
+        w.damageBase = sec.getDouble("Ballistics.Damage.Base", w.damageBase);
+
+        // Damage extras
+        ConfigurationSection dmgSec = sec.getConfigurationSection("Ballistics.Damage");
+        if (dmgSec != null) {
+            w.damageBaseExplosion = dmgSec.getDouble("Base_Explosion_Damage", w.damageBaseExplosion);
+            w.damageFireTicks = dmgSec.getInt("Fire_Ticks", w.damageFireTicks);
+            w.damageOwnerImmunity = dmgSec.getBoolean("Enable_Owner_Immunity", w.damageOwnerImmunity);
+            w.damageIgnoreTeams = dmgSec.getBoolean("Ignore_Teams", w.damageIgnoreTeams);
+            w.damageArmorDamage = dmgSec.getInt("Armor_Damage", w.damageArmorDamage);
         }
 
-        w.mode = sec.getString("Ballistics.Mode", "PHYSICAL");
-        w.entityType = sec.getString("Ballistics.Entity.Type", "minecraft:arrow");
-        w.gravityEnabled = sec.getBoolean("Ballistics.Gravity.Enabled", true);
-        if (sec.isSet("Ballistics.Gravity.Value")) w.gravityValue = sec.getDouble("Ballistics.Gravity.Value");
-        w.dragBase = sec.getDouble("Ballistics.Drag.Base", 0.99);
-        w.dragWater = sec.isSet("Ballistics.Drag.In_Water") ? sec.getDouble("Ballistics.Drag.In_Water") : null;
-        w.dragLava = sec.isSet("Ballistics.Drag.In_Lava") ? sec.getDouble("Ballistics.Drag.In_Lava") : null;
-        w.projectileSpeed = sec.getDouble("Ballistics.Projectile_Speed", 3.0);
-        w.rangeTicks = sec.getInt("Ballistics.Range_Ticks", 200);
-        w.projectileLifespanTicks = sec.getInt("Ballistics.Entity.Lifespan_Ticks", 200);
-
-        var hom = sec.getConfigurationSection("Ballistics.Homing");
-        w.homingEnabled = hom != null && hom.getBoolean("Enabled", false);
-        w.homingMaxTicks = hom != null ? hom.getInt("Max_Time_Ticks", 120) : 120;
-        w.homingMaxDistance = hom != null ? hom.getDouble("Max_Distance", 60.0) : 60.0;
-        w.homingTurnRateDeg = hom != null ? hom.getDouble("Turn_Rate_Deg_Per_Tick", 2.5) : 2.5;
-        w.homingLoseOnObstruction = hom != null && hom.getBoolean("Lose_Lock_On_Obstruction", false);
-        var rt = hom != null ? hom.getConfigurationSection("Retarget") : null;
-        w.homingRetarget = rt != null && rt.getBoolean("Enabled", false);
-        w.homingRetargetInterval = rt != null ? rt.getInt("Interval_Ticks", 10) : 10;
-        w.homingRetargetRadius = rt != null ? rt.getDouble("Radius", 12.0) : 12.0;
-
-        var pen = sec.getConfigurationSection("Ballistics.Penetration");
-        w.penetrationEnabled = pen != null && pen.getBoolean("Enabled", true);
-        w.penetrationMaxEntities = pen != null ? pen.getInt("Max_Entities", 1) : 1;
-        w.penetrationMaxBlocks = pen != null ? pen.getInt("Max_Blocks", 1) : 1;
-        w.penetrationAllowBlocks = pen != null ? pen.getStringList("Allow_Blocks") : java.util.List.of();
-
-        w.damageBase = sec.getDouble("Ballistics.Damage.Base", 6.0);
-        w.hsMultiplier = sec.getDouble("HitDetection.Headshot_Multiplier", 1.5);
-        var mult = sec.getConfigurationSection("HitDetection.Multipliers");
-        w.headMultiplier = mult != null ? mult.getDouble("Head", w.hsMultiplier) : w.hsMultiplier;
-        w.bodyMultiplier = mult != null ? mult.getDouble("Body", 1.0) : 1.0;
-        w.limbMultiplier = mult != null ? mult.getDouble("Limb", 0.9) : 0.9;
-
-        w.explosionSection = sec.getConfigurationSection("Ballistics.Explosion");
-        if (sec.getConfigurationSection("Ballistics.Impact_Explode") != null){
-            var ie = sec.getConfigurationSection("Ballistics.Impact_Explode");
-            w.impactExplodeEnabled = ie.getBoolean("Enabled", false);
-            w.impactExplodeDelay = ie.getInt("Delay_Ticks", 0);
-        } else {
-            w.impactExplodeEnabled = false;
-            w.impactExplodeDelay = 0;
-        }
-
+        // Visual / Explosion sections (keep original section for services)
         w.visualSection = sec.getConfigurationSection("Ballistics.Visual");
+        w.explosionSection = sec.getConfigurationSection("Ballistics.Explosion");
+
+        // Ranging / lifetimes
+        w.rangeTicks = sec.getInt("Ballistics.Range_Ticks", w.rangeTicks);
+        int lifeTicks = sec.getInt("Ballistics.Entity.Lifespan_Ticks", -1);
+        w.projectileLifespanTicks = (lifeTicks > 0) ? lifeTicks : Math.max(w.projectileLifespanTicks, w.rangeTicks);
+
+        // Impact explode
+        w.impactExplodeEnabled = sec.getBoolean("Ballistics.Impact_Explode.Enabled", w.impactExplodeEnabled);
+        w.impactExplodeDelay = sec.getInt("Ballistics.Impact_Explode.Delay_Ticks", w.impactExplodeDelay);
 
         // Melee
-        var melee = sec.getConfigurationSection("Melee");
-        if (melee != null){
-            w.meleeEnable = melee.getBoolean("Enable_Melee", false);
-            w.meleeAttachmentId = melee.getString("Melee_Attachment", null);
-            w.meleeRange = melee.getDouble("Melee_Range", 3.0);
-            w.meleeHitDelay = melee.getInt("Melee_Hit_Delay", 10);
-            w.meleeMissDelay = melee.getInt("Melee_Miss_Delay", 10);
-            w.meleeConsumeOnMiss = melee.getBoolean("Consume_On_Miss", false);
-            if (melee.isSet("Damage.Base")) w.meleeDamageBase = melee.getDouble("Damage.Base");
+        ConfigurationSection melee = sec.getConfigurationSection("Melee");
+        if (melee != null) {
+            w.meleeEnable = melee.getBoolean("Enable_Melee", w.meleeEnable);
+            w.meleeAttachmentId = melee.getString("Melee_Attachment", w.meleeAttachmentId);
+            w.meleeRange = melee.getDouble("Melee_Range", w.meleeRange);
+            w.meleeHitDelay = melee.getInt("Melee_Hit_Delay", w.meleeHitDelay);
+            w.meleeMissDelay = melee.getInt("Melee_Miss_Delay", w.meleeMissDelay);
+            w.meleeConsumeOnMiss = melee.getBoolean("Consume_On_Miss", w.meleeConsumeOnMiss);
+            if (melee.isSet("Damage.Base")) {
+                w.meleeDamageBase = melee.getDouble("Damage.Base");
+            }
         }
 
-        // Single Action fire mode
-        w.singleAction = sec.getBoolean("Trigger.Single_Action", false);
+        // Fire modes
+        w.singleAction = sec.getBoolean("Trigger.Single_Action", w.singleAction);
 
-        // Advanced explosion schema
-        if (w.explosionSection != null){
-            w.explosionKnockbackMultiplier = w.explosionSection.getDouble("Knockback_Multiplier", 1.0);
-            w.explosionExposure = w.explosionSection.getString("Explosion_Exposure", "DEFAULT");
-            w.explosionShape = w.explosionSection.getString("Explosion_Shape", "DEFAULT");
-            var etd = w.explosionSection.getConfigurationSection("Explosion_Type_Data");
-            if (etd != null){
-                w.expYield = etd.getDouble("Yield", 4.0);
-                w.expRadius = etd.getDouble("Radius", w.explosionSection.getDouble("Radius", 3.0));
-                w.expAngle = etd.getDouble("Angle", 0.0);
-                w.expDepth = etd.getDouble("Depth", 0.0);
-                w.expWidth = etd.getDouble("Width", 0.0);
-                w.expHeight = etd.getDouble("Height", 0.0);
-                w.expRays = etd.getInt("Rays", 16);
+        // Multipliers
+        double defHead = sec.getDouble("HitDetection.Headshot_Multiplier", w.headMultiplier);
+        w.headMultiplier = sec.getDouble("HitDetection.Multipliers.Head", defHead);
+        w.bodyMultiplier = sec.getDouble("HitDetection.Multipliers.Body", w.bodyMultiplier);
+        w.limbMultiplier = sec.getDouble("HitDetection.Multipliers.Limb", w.limbMultiplier);
+
+        // Explosion advanced
+        if (w.explosionSection != null) {
+            w.explosionKnockbackMultiplier = w.explosionSection.getDouble("Knockback_Multiplier", w.explosionKnockbackMultiplier);
+            w.explosionExposure = w.explosionSection.getString("Explosion_Exposure", w.explosionExposure);
+            w.explosionShape = w.explosionSection.getString("Explosion_Shape", w.explosionShape);
+
+            ConfigurationSection etd = w.explosionSection.getConfigurationSection("Explosion_Type_Data");
+            if (etd != null) {
+                w.expYield = etd.getDouble("Yield", w.expYield);
+                // Radius fallback
+                double r = etd.getDouble("Radius", -1.0);
+                if (r <= 0.0) r = w.explosionSection.getDouble("Radius", w.expRadius);
+                w.expRadius = r;
+                w.expAngle = etd.getDouble("Angle", w.expAngle);
+                w.expDepth = etd.getDouble("Depth", w.expDepth);
+                w.expWidth = etd.getDouble("Width", w.expWidth);
+                w.expHeight = etd.getDouble("Height", w.expHeight);
+                w.expRays = etd.getInt("Rays", w.expRays);
             } else {
-                w.expRadius = w.explosionSection.getDouble("Radius", 3.0);
-                w.expRays = 16;
+                w.expRadius = w.explosionSection.getDouble("Radius", w.expRadius);
+                w.expRays = w.expRays;
             }
-            var det = w.explosionSection.getConfigurationSection("Detonation");
-            if (det != null){
-                w.detonationDelayAfterImpact = det.getInt("Delay_After_Impact", 0);
-                w.detonationRemoveProjectile = det.getBoolean("Remove_Projectile_On_Detonation", true);
-                var iw = det.getConfigurationSection("Impact_When");
-                if (iw != null){
-                    w.detonationOnSpawn  = iw.getBoolean("Spawn", false);
-                    w.detonationOnEntity = iw.getBoolean("Entity", true);
-                    w.detonationOnBlock  = iw.getBoolean("Block", true);
-                } else {
-                    w.detonationOnSpawn=false; w.detonationOnEntity=true; w.detonationOnBlock=true;
+
+            ConfigurationSection det = w.explosionSection.getConfigurationSection("Detonation");
+            if (det != null) {
+                w.detonationDelayAfterImpact = det.getInt("Delay_After_Impact", w.detonationDelayAfterImpact);
+                w.detonationRemoveProjectile = det.getBoolean("Remove_Projectile_On_Detonation", w.detonationRemoveProjectile);
+                ConfigurationSection iw = det.getConfigurationSection("Impact_When");
+                if (iw != null) {
+                    w.detonationOnSpawn = iw.getBoolean("Spawn", w.detonationOnSpawn);
+                    w.detonationOnEntity = iw.getBoolean("Entity", w.detonationOnEntity);
+                    w.detonationOnBlock = iw.getBoolean("Block", w.detonationOnBlock);
                 }
             }
-            var cl = w.explosionSection.getConfigurationSection("Cluster_Bomb");
-            if (cl != null){
-                w.clusterSplitProjectile = cl.getString("Split_Projectile", null);
-                w.clusterProjectileSpeed = cl.getDouble("Projectile_Speed", 1.0);
-                w.clusterNumberOfBombs = cl.getInt("Number_Of_Bombs", 4);
-                w.clusterNumberOfSplits = cl.getInt("Number_Of_Splits", 1);
-                var cdet = cl.getConfigurationSection("Detonation");
-                if (cdet != null){
-                    w.clusterDetonationDelayAfterImpact = cdet.getInt("Delay_After_Impact", 0);
-                    w.clusterRemoveProjectileOnDetonation = cdet.getBoolean("Remove_Projectile_On_Detonation", true);
-                    var ciw = cdet.getConfigurationSection("Impact_When");
-                    if (ciw != null){
-                        w.clusterImpactSpawn  = ciw.getBoolean("Spawn", false);
-                        w.clusterImpactEntity = ciw.getBoolean("Entity", true);
-                        w.clusterImpactBlock  = ciw.getBoolean("Block", true);
+
+            ConfigurationSection cl = w.explosionSection.getConfigurationSection("Cluster_Bomb");
+            if (cl != null) {
+                w.clusterSplitProjectile = cl.getString("Split_Projectile", w.clusterSplitProjectile);
+                w.clusterProjectileSpeed = cl.getDouble("Projectile_Speed", w.clusterProjectileSpeed);
+                w.clusterNumberOfBombs = cl.getInt("Number_Of_Bombs", w.clusterNumberOfBombs);
+                w.clusterNumberOfSplits = cl.getInt("Number_Of_Splits", w.clusterNumberOfSplits);
+
+                ConfigurationSection cdet = cl.getConfigurationSection("Detonation");
+                if (cdet != null) {
+                    w.clusterDetonationDelayAfterImpact = cdet.getInt("Delay_After_Impact", w.clusterDetonationDelayAfterImpact);
+                    w.clusterRemoveProjectileOnDetonation = cdet.getBoolean("Remove_Projectile_On_Detonation", w.clusterRemoveProjectileOnDetonation);
+                    ConfigurationSection ciw = cdet.getConfigurationSection("Impact_When");
+                    if (ciw != null) {
+                        w.clusterImpactSpawn = ciw.getBoolean("Spawn", w.clusterImpactSpawn);
+                        w.clusterImpactEntity = ciw.getBoolean("Entity", w.clusterImpactEntity);
+                        w.clusterImpactBlock = ciw.getBoolean("Block", w.clusterImpactBlock);
                     }
                 }
             }
-            var air = w.explosionSection.getConfigurationSection("Airstrike");
-            if (air != null){
-                w.airstrikeDroppedProjectile = air.getString("Dropped_Projectile", null);
-                w.airstrikeMinBombs = air.getInt("Minimum_Bombs", 4);
-                w.airstrikeMaxBombs = air.getInt("Maximum_Bombs", 8);
-                w.airstrikeHeight = air.getDouble("Height", 60.0);
-                w.airstrikeVerticalRandomness = air.getDouble("Vertical_Randomness", 5.0);
-                w.airstrikeDistanceBetween = air.getDouble("Distance_Between_Bombs", 3.0);
-                w.airstrikeMaxDistanceFromCenter = air.getDouble("Maximum_Distance_From_Center", 25.0);
-                w.airstrikeLayers = air.getInt("Layers", 1);
-                w.airstrikeDelayBetweenLayers = air.getInt("Delay_Between_Layers", 40);
-                var adet = air.getConfigurationSection("Detonation");
-                if (adet != null){
-                    w.airstrikeDetonationDelayAfterImpact = adet.getInt("Delay_After_Impact", 0);
-                    w.airstrikeRemoveProjectileOnDetonation = adet.getBoolean("Remove_Projectile_On_Detonation", true);
-                    var aiw = adet.getConfigurationSection("Impact_When");
-                    if (aiw != null){
-                        w.airstrikeImpactSpawn  = aiw.getBoolean("Spawn", false);
-                        w.airstrikeImpactEntity = aiw.getBoolean("Entity", true);
-                        w.airstrikeImpactBlock  = aiw.getBoolean("Block", true);
+
+            ConfigurationSection air = w.explosionSection.getConfigurationSection("Airstrike");
+            if (air != null) {
+                w.airstrikeDroppedProjectile = air.getString("Dropped_Projectile", w.airstrikeDroppedProjectile);
+                w.airstrikeMinBombs = air.getInt("Minimum_Bombs", w.airstrikeMinBombs);
+                w.airstrikeMaxBombs = air.getInt("Maximum_Bombs", w.airstrikeMaxBombs);
+                w.airstrikeHeight = air.getDouble("Height", w.airstrikeHeight);
+                w.airstrikeVerticalRandomness = air.getDouble("Vertical_Randomness", w.airstrikeVerticalRandomness);
+                w.airstrikeDistanceBetween = air.getDouble("Distance_Between_Bombs", w.airstrikeDistanceBetween);
+                w.airstrikeMaxDistanceFromCenter = air.getDouble("Maximum_Distance_From_Center", w.airstrikeMaxDistanceFromCenter);
+                w.airstrikeLayers = air.getInt("Layers", w.airstrikeLayers);
+                w.airstrikeDelayBetweenLayers = air.getInt("Delay_Between_Layers", w.airstrikeDelayBetweenLayers);
+
+                ConfigurationSection adet = air.getConfigurationSection("Detonation");
+                if (adet != null) {
+                    w.airstrikeDetonationDelayAfterImpact = adet.getInt("Delay_After_Impact", w.airstrikeDetonationDelayAfterImpact);
+                    w.airstrikeRemoveProjectileOnDetonation = adet.getBoolean("Remove_Projectile_On_Detonation", w.airstrikeRemoveProjectileOnDetonation);
+                    ConfigurationSection aiw = adet.getConfigurationSection("Impact_When");
+                    if (aiw != null) {
+                        w.airstrikeImpactSpawn = aiw.getBoolean("Spawn", w.airstrikeImpactSpawn);
+                        w.airstrikeImpactEntity = aiw.getBoolean("Entity", w.airstrikeImpactEntity);
+                        w.airstrikeImpactBlock = aiw.getBoolean("Block", w.airstrikeImpactBlock);
                     }
                 }
             }
         }
 
-        w.spreadSection = sec.getConfigurationSection("Spread");
-        w.recoilSection = sec.getConfigurationSection("Recoil");
-
-        // CS remap: if provided as CrackShot-style under Weapon_Title, shift section
-        if (sec.getConfigurationSection("Weapon_Title") != null){
-            sec = sec.getConfigurationSection("Weapon_Title");
-        }
-
-        // CrackShot compatibility mapping (minimal useful subset)
-        if (sec.getConfigurationSection("Shooting") != null){
-            var csS = sec.getConfigurationSection("Shooting");
-            // Fully_Automatic
-            if (csS.getBoolean("Fully_Automatic.Enable", false)){
-                w.selectFireOrder = java.util.List.of("SEMI","AUTO");
-            }
-            // Fire rate: RPM
-            if (csS.isSet("Fully_Automatic.Fire_Rate")){
-                w.rateRPM = csS.getDouble("Fully_Automatic.Fire_Rate", w.rateRPM);
-                w.ratePerSec = Math.max(0.1, w.rateRPM / 60.0);
-            }
-            // Delay between shots (ticks)
-            if (csS.isSet("Delay_Between_Shots")){
-                double ticks = csS.getDouble("Delay_Between_Shots", 4.0);
-                if (ticks > 0) w.ratePerSec = 20.0 / ticks;
-                w.rateRPM = w.ratePerSec * 60.0;
-            }
-            // Projectile speed / damage / drop
-            if (csS.isSet("Projectile_Speed")) w.projectileSpeed = csS.getDouble("Projectile_Speed", w.projectileSpeed);
-            if (csS.isSet("Projectile_Damage")) w.damageBase = csS.getDouble("Projectile_Damage", w.damageBase);
-            if (csS.getBoolean("Remove_Bullet_Drop", false)) { w.gravityEnabled = false; w.gravityValue = 0.0; }
-
-            if (csS.isSet("Projectile_Type")){
-                String t = csS.getString("Projectile_Type", "arrow").toLowerCase();
-                if (t.contains("snow")) { w.mode = "PHYSICAL"; w.entityType = "minecraft:snowball"; }
-                else { w.mode = "PHYSICAL"; w.entityType = "minecraft:arrow"; }
-            }
-        }
-        if (sec.getConfigurationSection("Burstfire") != null){
-            var csB = sec.getConfigurationSection("Burstfire");
-            if (csB.getBoolean("Enable", false)){
-                w.burstCount = csB.getInt("Shots_Per_Burst", w.burstCount);
-                w.burstInterval = csB.getInt("Delay_Between_Shots_In_Burst", w.burstInterval);
-                // ensure burst in cycle order
-                if (w.selectFireOrder == null || w.selectFireOrder.isEmpty()) w.selectFireOrder = java.util.List.of("SEMI","BURST");
-            }
-        }
-        if (sec.getConfigurationSection("Ammo") != null){
-            var csA = sec.getConfigurationSection("Ammo");
-            boolean ammoEnable = csA.getBoolean("Enable", true);
-            w.consumeAmmo = ammoEnable && csA.getBoolean("Take_Ammo_Per_Shot", true);
-            w.requireAmmo = ammoEnable;
-            // map material id if provided
-            String ammoIdStr = csA.getString("Ammo_Item_ID", null);
-            if (ammoIdStr != null){
-                w.ammoId = ammoIdStr;
-            }
-        }
-        if (sec.getConfigurationSection("Scope") != null){
-            var csScope = sec.getConfigurationSection("Scope");
-            if (csScope.getBoolean("Enable", false)){
-                double zoomSpread = csScope.getDouble("Zoom_Bullet_Spread", 0.7);
-                w.adsSpeedScale = 0.8;
-            }
-        }
-    
         return w;
     }
 }

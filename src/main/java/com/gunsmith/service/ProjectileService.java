@@ -49,7 +49,8 @@ public class ProjectileService implements Listener {
             if (!proj.isValid() || proj.isDead()) return;
             proj.remove();
             if (w.explosionSection != null){
-                explosions.detonate(proj.getLocation(), w);
+                org.bukkit.entity.Player owner = null; try{ java.util.UUID uid = java.util.UUID.fromString(pdc.get(keyShooter, org.bukkit.persistence.PersistentDataType.STRING)); owner = org.bukkit.Bukkit.getPlayer(uid);}catch(Exception ignored){}
+            explosions.detonate(proj.getLocation(), w, owner);
             }
         }}.runTaskLater(plugin, Math.max(1, w.projectileLifespanTicks));
     }
@@ -70,7 +71,8 @@ public class ProjectileService implements Listener {
                 int delay = pdc.getOrDefault(keyImpactDelay, PersistentDataType.INTEGER, 0);
                 new BukkitRunnable(){ @Override public void run(){
                     if (proj.isValid()) proj.remove();
-                    if (w.explosionSection != null) explosions.detonate(le.getLocation(), w);
+                    if (w.explosionSection != null) org.bukkit.entity.Player owner = null; try{ java.util.UUID uid = java.util.UUID.fromString(pdc.get(keyShooter, org.bukkit.persistence.PersistentDataType.STRING)); owner = org.bukkit.Bukkit.getPlayer(uid);}catch(Exception ignored){}
+                    explosions.detonate(le.getLocation(), w, owner);
                 }}.runTaskLater(plugin, Math.max(0, delay));
             }
         } else if (e.getHitBlock() != null){
@@ -79,7 +81,8 @@ public class ProjectileService implements Listener {
             if (w.impactExplodeEnabled && w.explosionSection != null){
                 int delay = pdc.getOrDefault(keyImpactDelay, PersistentDataType.INTEGER, 0);
                 new BukkitRunnable(){ @Override public void run(){
-                    explosions.detonate(e.getHitBlock().getLocation().add(0.5,0.5,0.5), w);
+                    org.bukkit.entity.Player owner = null; try{ java.util.UUID uid = java.util.UUID.fromString(pdc.get(keyShooter, org.bukkit.persistence.PersistentDataType.STRING)); owner = org.bukkit.Bukkit.getPlayer(uid);}catch(Exception ignored){}
+                    explosions.detonate(e.getHitBlock().getLocation().add(0.5,0.5,0.5), w, owner);
                 }}.runTaskLater(plugin, Math.max(0, delay));
             }
         }

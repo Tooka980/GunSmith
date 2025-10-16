@@ -62,6 +62,13 @@ public class WeaponConfig {
     public double bodyMultiplier;
     public double limbMultiplier;
 
+    // Damage extras
+    public double damageBaseExplosion;
+    public int damageFireTicks;
+    public boolean damageOwnerImmunity;
+    public boolean damageIgnoreTeams;
+    public int damageArmorDamage;
+
     // Explosion
     public ConfigurationSection explosionSection;
     public boolean impactExplodeEnabled;

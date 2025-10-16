@@ -1,0 +1,4 @@
+name: GunSmith
+version: ${version}
+main: com.gunsmith.GunSmithPlugin
+api-version: '1.21'

@@ -1,0 +1,30 @@
+name: build
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Generate Gradle Wrapper (8.10.2)
+        shell: pwsh
+        run: |
+          $ver="8.10.2"
+          Invoke-WebRequest "https://services.gradle.org/distributions/gradle-$ver-bin.zip" -OutFile gradle.zip
+          Expand-Archive gradle.zip -DestinationPath .
+          .\gradle-$ver\bin\gradle.bat wrapper --gradle-version $ver
+      - name: Build with Wrapper
+        shell: pwsh
+        run: .\gradlew.bat build
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GunSmith-jar
+          path: build\libs\*.jar

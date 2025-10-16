@@ -46,12 +46,6 @@ public class WeaponConfig {
     public boolean airstrikeRemoveProjectileOnDetonation;
     public boolean airstrikeImpactSpawn, airstrikeImpactEntity, airstrikeImpactBlock;
 
-    // Projectile lifecycle & impact flags used by ProjectileService
-    public int projectileLifespanTicks = 200;
-    public boolean impactExplodeEnabled;
-    public int impactExplodeDelay;
-    public int rangeTicks = 200;
-
     public String id;
     public String material;
     public String name;

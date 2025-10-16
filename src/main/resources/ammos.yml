@@ -1,0 +1,5 @@
+AK_Ammo_545x39:
+  Item:
+    Material: "minecraft:paper"
+    Name: "&e5.45x39mm"
+  Reserve_Max: 210

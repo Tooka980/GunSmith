@@ -1,0 +1,9 @@
+AK_12:
+  Info:
+    Weapon_Item:
+      Material: "minecraft:iron_horse_armor"
+      CustomModelData: 12112
+      Name: "&6AK-12"
+      Unbreakable: true
+  Trigger: { Select_Fire: ["SEMI","BURST","AUTO"], Rate_Per_Sec: 10.8, Burst: { Count: 2, Interval_Ticks: 2 } }
+  Ballistics: { Mode: PHYSICAL, Entity: { Type: "minecraft:arrow" }, Gravity: { Enabled: true, Value: 0.05 } }

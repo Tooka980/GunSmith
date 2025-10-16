@@ -5,7 +5,16 @@ import com.gunsmith.commands.GmCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class GunSmithPlugin extends JavaPlugin {
-    private WeaponRegistry weaponRegistry;
+
+    private void exportResourceIfPresent(String path) {
+        if (getResource(path) != null) {
+            saveResource(path, false);
+        } else {
+            getLogger().warning("Embedded resource missing, skipped: " + path);
+        }
+    }
+
+private WeaponRegistry weaponRegistry;
     private FireService fireService;
     private HomingService homingService;
     private VisualService visualService;
@@ -13,10 +22,10 @@ public class GunSmithPlugin extends JavaPlugin {
     private ListGui listGui;
 
     @Override public void onEnable() {
-        saveResource("weapons/assault_rifle/AK_12.yml", false);
-        saveResource("ammos.yml", false);
-        saveResource("attachments.yml", false);
-        saveResource("GunSmith_full_schema.yml", false);
+        exportResourceIfPresent("weapons/assault_rifle/AK_12.yml");
+        exportResourceIfPresent("ammos.yml");
+        exportResourceIfPresent("attachments.yml");
+        exportResourceIfPresent("GunSmith_full_schema.yml");
 
         weaponRegistry = new WeaponRegistry(this); weaponRegistry.reload();
         visualService = new VisualService(this);

@@ -3,16 +3,21 @@ package com.gunsmith;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
- * Clean onEnable with correct service wiring for 0.3.x line.
+ * Clean onEnable wiring for 0.3.x
  * - Avoids registering null listeners
- * - Matches current constructor signatures observed in build logs
+ * - Matches current constructor signatures in services
+ * - Exposes getters used by other components (projectile/ammos)
  */
 public class GunSmithPlugin extends JavaPlugin {
 
     private com.gunsmith.service.ProjectileService projectileService;
+    private com.gunsmith.service.AmmoService ammoService;
 
     public com.gunsmith.service.ProjectileService getProjectileService() {
         return this.projectileService;
+    }
+    public com.gunsmith.service.AmmoService getAmmoService() {
+        return this.ammoService;
     }
 
     @Override
@@ -22,17 +27,18 @@ public class GunSmithPlugin extends JavaPlugin {
         try { saveResource("weapons/assault_rifle/AK_12.yml", false); } catch (Exception ignored) {}
         try { saveResource("ammos.yml", false); } catch (Throwable ignored) {}
 
-        // Core services (respect constructor signatures)
+        // Core services (respect actual constructor signatures)
         com.gunsmith.service.WeaponRegistry weaponRegistry = new com.gunsmith.service.WeaponRegistry(this);
-        com.gunsmith.service.AmmoService ammoService = new com.gunsmith.service.AmmoService(this);
+        this.ammoService = new com.gunsmith.service.AmmoService(this);
         com.gunsmith.service.VisualService visualService = new com.gunsmith.service.VisualService(this);
         com.gunsmith.service.ExplosionService explosionService = new com.gunsmith.service.ExplosionService(this, visualService);
-        com.gunsmith.service.HomingService homingService = new com.gunsmith.service.HomingService(this, weaponRegistry);
+        // HomingService expects (Plugin, VisualService) -> pass visualService (以前は誤って WeaponRegistry を渡していた)
+        com.gunsmith.service.HomingService homingService = new com.gunsmith.service.HomingService(this, visualService);
         this.projectileService = new com.gunsmith.service.ProjectileService(this, weaponRegistry, explosionService);
-        com.gunsmith.service.MeleeService meleeService = new com.gunsmith.service.MeleeService(this, weaponRegistry, ammoService);
-        // FireService is NOT a Listener; do not register as events
+        com.gunsmith.service.MeleeService meleeService = new com.gunsmith.service.MeleeService(this, weaponRegistry, this.ammoService);
+        // FireService は Listener ではない
         com.gunsmith.service.FireService fireService = new com.gunsmith.service.FireService(
-                this, weaponRegistry, homingService, visualService, ammoService
+                this, weaponRegistry, homingService, visualService, this.ammoService
         );
 
         // Register only real listeners

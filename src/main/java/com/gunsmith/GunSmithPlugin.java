@@ -1,7 +1,8 @@
 package com.gunsmith;
 
-import com.gunsmith.commands.GmCommand;
+import com.gunsmith.commands.GmExecutor;
 import com.gunsmith.service.*;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class GunSmithPlugin extends JavaPlugin {
@@ -16,7 +17,9 @@ public class GunSmithPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        // config.yml を同梱している場合のみ保存
         if (getResource("config.yml") != null) saveDefaultConfig();
+        // サンプルを展開（同梱されていれば）
         try { saveResource("weapons/assault_rifle/AK_12.yml", false); } catch (Exception ignored) {}
         try { saveResource("ammos.yml", false); } catch (Throwable ignored) {}
 
@@ -34,18 +37,23 @@ public class GunSmithPlugin extends JavaPlugin {
         var pm = getServer().getPluginManager();
         pm.registerEvents(this.projectileService, this);
         pm.registerEvents(meleeService, this);
-        pm.registerEvents(this.listGui, this); // GUIのクリックキャンセル等をここで受けるなら
+        pm.registerEvents(this.listGui, this); // GUIクリックのキャンセル等
 
-        // ---- /gm コマンド登録（Paperの registerCommand を使用）----
-        // Brigadier / Lifecycle を使わないので依存不整合が起きません
-        this.registerCommand("gm", new GmCommand(this, weaponRegistry, ammoService, listGui))
-            .setTabCompleter(new GmCommand(this, weaponRegistry, ammoService, listGui));
+        // ---- /gm コマンド登録（Bukkit流。plugin.yml と対で動く）----
+        GmExecutor gm = new GmExecutor(this, weaponRegistry, ammoService, listGui);
+        PluginCommand pc = getCommand("gm");
+        if (pc != null) {
+            pc.setExecutor(gm);
+            pc.setTabCompleter(gm);
+        } else {
+            getLogger().severe("Command 'gm' missing. Check plugin.yml!");
+        }
 
         getLogger().info("GunSmith initialized.");
     }
 
     @Override
     public void onDisable() {
-        // 片付けは必要に応じて
+        // 必要なら片付け
     }
 }
